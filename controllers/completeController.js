@@ -5,7 +5,7 @@ const debug = require('debug')('app:completeController');
 var AWS = require('aws-sdk');
 AWS.config.update({region: 'us-west-2'});
 
-function generateMessage(topic, time, date, location, replyTo)  {
+function generateMessage({topic, time, date, location, replyTo})  {
     return `Reminder for appointment with World Relief\n\
 Topic: ${topic}\n\
 ${time} ${date}\n\
