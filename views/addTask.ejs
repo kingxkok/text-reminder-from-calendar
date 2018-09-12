@@ -41,35 +41,37 @@
             const secs = time.slice(13, 15);
             const timezone = extractedCalendarData.timezones[event.startTime.TZID];
 
-            // if (timezone) {
-            //     console.log(timezone)
-            //     Object.values(timezone).forEach((timezoneType) => {
-            //         const rrule = timezoneType.RRULE;
-            //         if (!rrule) return;
+            if (timezone) {
+                console.log(timezone)
+                Object.values(timezone).forEach((timezoneType) => {
+                    const rrule = timezoneType.RRULE;
+                    if (!rrule) return;
 
-            //         let rruleMonth = rrule.BYMONTH;
-            //         rruleMonth = rruleMonth.length === 1 ? '0' + rruleMonth : rruleMonth;
+                    let rruleMonth = rrule.BYMONTH;
+                    rruleMonth = rruleMonth.length === 1 ? '0' + rruleMonth : rruleMonth;
 
-            //         let cutoffDate = year + '-' + rruleMonth + '-';
-            //         let rruleDay = rrule.BYDAY;
+                    let cutoffDate = year + '-' + rruleMonth + '-';
+                    let rruleDay = rrule.BYDAY;
 
-            //         if (rruleDay.includes('SU')) {
-            //             const firstDayOfMonth = new Date(cutoffDate + '01').getDay();
-            //             const dayToUse = '0' + ((7 - firstDayOfMonth) % 7);
-            //             cutoffDate += dayToUse;
-            //         } else {
-            //             cutoffDate += '01';
-            //         }
-            //         const tempTZOFFSETTO = timezoneType.TZOFFSETTO.slice(0, 3) + ':' + timezoneType.TZOFFSETTO.slice(3);
-            //         cutoffDate += 'T02:00' + tempTZOFFSETTO;
-            //         console.log('date', new Date(cutoffDate));
+                    if (rruleDay.includes('SU')) {
+                        const firstDayOfMonth = new Date(cutoffDate + '01').getDay();
+                        const dayToUse = '0' + ((7 - firstDayOfMonth) % 7);
+                        cutoffDate += dayToUse;
+                    } else {
+                        cutoffDate += '01';
+                    }
+                    const tempTZOFFSETTO = timezoneType.TZOFFSETTO.slice(0, 3) + ':' + timezoneType.TZOFFSETTO.slice(3);
+                    cutoffDate += 'T02:00' + tempTZOFFSETTO;
+                    console.log('date', new Date(cutoffDate));
 
-            //     })
-            // }
+                })
+            }
 
-            let timezoneOffset = Object.values(timezone)[0].TZOFFSETTO;
-            timezoneOffset = timezoneOffset.slice(0, 3) + ":" + timezoneOffset.slice(3);
-
+            let timezoneOffset = '';
+            if (timezone) {
+                timezoneOffset = Object.values(timezone)[0].TZOFFSETTO;
+                timezoneOffset = timezoneOffset.slice(0, 3) + ":" + timezoneOffset.slice(3);
+            }
             const date = [year, month, day].join('-') + 'T' + [hours, mins, secs].join(':') + timezoneOffset;
 
             epochTime = new Date(date).getTime();
