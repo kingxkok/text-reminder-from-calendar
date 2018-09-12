@@ -14,17 +14,22 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use(morgan('tiny'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '2mb', type: 'application/json' }));
+app.use(
+  bodyParser.urlencoded({
+    limit: '2mb',
+    extended: true,
+    parameterLimit: 50000
+  })
+);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(__dirname + '/node_modules/bootstrap/dist/js')); // redirect bootstrap JS
 app.use('/js', express.static(__dirname + '/node_modules/jquery/dist')); // redirect JS jQuery
+app.use('/js', express.static(__dirname + '/public/clientjs')); // redirect public client js
 app.use('/css', express.static(__dirname + '/node_modules/bootstrap/dist/css')); // redirect CSS bootstrap
 app.use('/css', express.static(__dirname + '/public/stylesheets'));
-app.use('/webfonts', express.static(__dirname + '/public/fonts/webfonts/')); 
+app.use('/webfonts', express.static(__dirname + '/public/fonts/webfonts/'));
 
 app.get('/', todoRouter);
 app.post('/task/complete/:id', todoRouter);

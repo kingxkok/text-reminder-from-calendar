@@ -1,0 +1,23 @@
+.upload-button {
+  padding: 4px;
+  border: 1px solid black;
+  border-radius: 5px;
+  display: block;
+  float: left;
+}
+.upload-button:link {
+  color: #c00;
+} /* unvisited links */
+.upload-button:visited {
+  color: #0c0;
+} /* visited links   */
+.upload-button:hover {
+  background-color: rgb(240, 240, 240);
+} /* user hovers     */
+.upload-button:active {
+  color: #ccc;
+} /* active links    */
+
+.file-upload {
+  display: none;
+}

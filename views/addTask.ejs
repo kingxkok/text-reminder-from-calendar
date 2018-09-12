@@ -1,37 +1,96 @@
 <html>
-  <head>
-    <title><%= title %></title>
+
+<head>
+    <title>
+        <%= title %>
+    </title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link rel="stylesheet" href="/css/bootstrap.min.css">
-  </head>
-  <body>
+    <link rel="stylesheet" href="/stylesheets/upload.css">
+</head>
+
+<body>
     <div class="container">
         <% include ./partials/nav %>
-        <div class="card" style="width: 50%">
-        <form method="post" action="/task/add/" style="padding: 20px">
+        <div id='drop-area' class="card" style="width: 100%">
             <div class="form-group">
-                <label for="summary" class="text-primary">Summary</label>
-                <input class="form-control" id="summary" name="summary"></textarea>
-
-                <label for="detail" class="text-primary">Details</label>
-                <textarea class="form-control" id="detail" rows="3" name="detail"></textarea>
-            
-                <label for="priority" class="text-primary">Priority</label>
-                <select class="form-control" id="priority" name="priority">
-                    <option>Low</option>
-                    <option>Normal</option>
-                    <option>High</option>
-                </select>
-
-                <label for="duedate" class="text-primary">Due Date:</label>
-                <input type="date" class="form-control" id="duedate" name="dueDate">
-                <input id="isComplete" name="isComplete" type="hidden" value="false">
+                <div class="upload-button">Upload Calendar</div>
+                <input class="file-upload" type="file" accept="text/calendar" />
             </div>
-                <input type="submit" class="btn btn-primary" value="Add Task">
-        </form>
+            <button id='confirm' style='width: 10em'>Confirm</button>
+            <pre id="calendar-preview"> </pre>
         </div>
     </div> <!-- container -->
-  </body>
-  <script src="/js/jquery.min.js"></script>
-  <script src="/js/bootstrap.min.js"></script>
+</body>
+<script src="/js/jquery.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/icsManipulation.js">//for ICAL</script>
+
+<script>
+
+    const selectDataToSend = (extractedCalendarData) => {
+        let selectData = { events: [] }
+        extractedCalendarData.events.forEach((event) => {
+            let title, phoneNumber, epochTime;
+            const time = event.startTime.time;
+            const year = time.slice(0, 4);
+            const month = time.slice(4, 6);
+            const day = time.slice(6, 8);
+            const hours = time.slice(9, 11);
+            const mins = time.slice(11, 13);
+            const secs = time.slice(13, 15);
+            const timezone = extractedCalendarData.timezones[event.startTime.TZID];
+            let timezoneOffset = Object.values(timezone)[0].TZOFFSETTO;
+            timezoneOffset = timezoneOffset.slice(0, 3) + ":" + timezoneOffset.slice(3);
+
+            const date = [year, month, day].join('-') + 'T' + [hours, mins, secs].join(':') + timezoneOffset;
+
+            epochTime = new Date(date).getTime();
+            title = event.summary;
+            phoneNumber = event.location;
+
+            selectData.events.push({ title, phoneNumber, epochTime })
+        })
+        return selectData;
+    }
+
+
+    let selectedCalendarData;
+    $(document).ready(function () {
+        var readURL = function (input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    const icsString = e.target.result;
+                    let extractedCalendarData = ICAL.extractCalendarData(icsString);
+                    console.log(window.cal = extractedCalendarData);
+                    $('#calendar-preview').html(JSON.stringify(extractedCalendarData, null, '\t'));
+                    selectedCalendarData = selectDataToSend(extractedCalendarData);
+
+                }
+
+                reader.readAsText(input.files[0]);
+            }
+        }
+        $(".file-upload").on('change', function () {
+            readURL(this);
+        });
+
+        $(".upload-button").on('click', function () {
+            $(".file-upload").click();
+        });
+
+        $("#confirm").on('click', () => {
+            $.ajax({
+                type: "POST",
+                url: '/task/add/',
+                data: JSON.stringify(selectedCalendarData),
+                success: () => { alert('success!') },
+                contentType: 'application/json'
+            });
+        })
+
+    });
+</script>
+
 </html>
