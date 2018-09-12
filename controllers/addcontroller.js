@@ -9,7 +9,7 @@ function generateMessage({ topic, time, date, location, replyTo }) {
   return `Reminder for appointment with World Relief\n\
 Topic: ${topic}\n\
 ${time} ${date}\n\
-${location}\n\
+${location ? location : ''}\n\
 For Replies: ${replyTo}`;
 }
 
@@ -38,8 +38,11 @@ exports.addTask = (req, res) => {
 exports.saveTask = async (req, res) => {
   try {
     const body = req.body;
-    for (item of body.events) {
-      console.log(item.epochTime - Date.now());
+    for (let item of body.events) {
+      const delay = item.epochTime - Date.now();
+      setTimeout(() => {
+        sendSMS({ phoneNumber: item.phoneNumber, replyTo: '7142104730' });
+      }, delay);
     }
 
     res.redirect('/task/add');
