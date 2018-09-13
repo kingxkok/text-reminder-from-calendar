@@ -15,7 +15,10 @@ function generateMessage({
 }) {
   return `Reminder for appointment with ${provider}\n\
 Topic: ${topic}\n\
-${new Date(epochTime).toLocaleString(language, { timeZone })}\n\
+${new Date(epochTime).toLocaleString(language, {
+    timeZoneName: 'short',
+    timeZone
+  })}\n\
 For Replies: ${replyTo}`;
 }
 
