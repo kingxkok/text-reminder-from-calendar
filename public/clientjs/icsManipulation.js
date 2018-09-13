@@ -75,3 +75,68 @@ ICAL.extractCalendarData = icsString => {
   }
   return calendarDataObject;
 };
+
+ICAL.selectTimezoneData = (year, timezone) => {
+  let selectedTimezoneTypes = [];
+  Object.values(timezone).forEach(timezoneType => {
+    const rrule = timezoneType.RRULE;
+    if (!rrule) return;
+
+    let rruleMonth = rrule.BYMONTH;
+    rruleMonth = rruleMonth.length === 1 ? '0' + rruleMonth : rruleMonth;
+
+    let cutoffDateStr = year + '-' + rruleMonth + '-';
+    const tzOffsetFrom =
+      timezoneType.TZOFFSETFROM.slice(0, 3) +
+      ':' +
+      timezoneType.TZOFFSETFROM.slice(3);
+    const tzOffsetTo =
+      timezoneType.TZOFFSETTO.slice(0, 3) +
+      ':' +
+      timezoneType.TZOFFSETTO.slice(3);
+
+    let rruleDay = rrule.BYDAY;
+
+    if (rruleDay.includes('SU')) {
+      let startingPointDay;
+      switch (rruleDay) {
+        case '1SU':
+          startingPointDay = 1;
+          break;
+        case '2SU':
+          startingPointDay = 8;
+          break;
+        case '3SU':
+          startingPointDay = 15;
+          break;
+        case '-1SU':
+          startingPointDay = 22; //doesn't really work. need last sunday logic
+          break;
+        default:
+          startingPointDay = 1;
+      }
+      // only works if first sunday
+      const firstDayOfMonth = new Date(
+        cutoffDateStr + '01T00:00:00' + '+00:00'
+      ).getUTCDay();
+      console.log(firstDayOfMonth, startingPointDay);
+      let dayToUse = startingPointDay + ((7 - firstDayOfMonth) % 7) + '';
+      console.log(dayToUse, firstDayOfMonth);
+      if (dayToUse.length === 1) dayToUse = '0' + dayToUse;
+      cutoffDateStr += dayToUse;
+      console.log(dayToUse);
+    } else {
+      cutoffDateStr += '01';
+    }
+
+    cutoffDateStr += 'T01:59:59' + tzOffsetFrom;
+
+    const cutoffDate = new Date(cutoffDateStr);
+    selectedTimezoneTypes.push({ cutoffDate, tzOffsetFrom, tzOffsetTo });
+  });
+  selectedTimezoneTypes.sort((tzType1, tzType2) => {
+    return tzType1.cutoffDate > tzType2.cutoffDate;
+  });
+  console.log(selectedTimezoneTypes, 'slt');
+  return selectedTimezoneTypes;
+};

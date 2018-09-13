@@ -27,6 +27,9 @@
 <script src="/js/icsManipulation.js">//for ICAL</script>
 
 <script>
+
+
+
     const phonNumberValidatorRegex = /^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
     const selectDataToSend = (extractedCalendarData) => {
         let selectData = { events: [] }
@@ -41,40 +44,32 @@
             const secs = time.slice(13, 15);
             const timezone = extractedCalendarData.timezones[event.startTime.TZID];
 
+            let selectedTimezoneTypes = [];
             if (timezone) {
-                console.log(timezone)
-                Object.values(timezone).forEach((timezoneType) => {
-                    const rrule = timezoneType.RRULE;
-                    if (!rrule) return;
-
-                    let rruleMonth = rrule.BYMONTH;
-                    rruleMonth = rruleMonth.length === 1 ? '0' + rruleMonth : rruleMonth;
-
-                    let cutoffDate = year + '-' + rruleMonth + '-';
-                    let rruleDay = rrule.BYDAY;
-
-                    if (rruleDay.includes('SU')) {
-                        const firstDayOfMonth = new Date(cutoffDate + '01').getDay();
-                        const dayToUse = '0' + ((7 - firstDayOfMonth) % 7);
-                        cutoffDate += dayToUse;
-                    } else {
-                        cutoffDate += '01';
-                    }
-                    const tempTZOFFSETTO = timezoneType.TZOFFSETTO.slice(0, 3) + ':' + timezoneType.TZOFFSETTO.slice(3);
-                    cutoffDate += 'T02:00' + tempTZOFFSETTO;
-                    console.log('date', new Date(cutoffDate));
-
-                })
+                selectedTimezoneTypes = ICAL.selectTimezoneData(year, timezone);
             }
 
             let timezoneOffset = '';
-            if (timezone) {
+            let date = [year, month, day].join('-') + 'T' + [hours, mins, secs].join(':');
+            if (selectedTimezoneTypes.length > 0) {
+                let i;
+                for (i = 0; i < selectedTimezoneTypes.length; i++) {
+                    if (new Date(date + selectedTimezoneTypes[i].tzOffsetFrom) < selectedTimezoneTypes[i].cutoffDate) {
+                        timezoneOffset = selectedTimezoneTypes[i].tzOffsetFrom;
+                        break;
+                    };
+                }
+                if (i === selectedTimezoneTypes.length)
+                    timezoneOffset = selectedTimezoneTypes[i - 1].tzOffsetTo;
+            }
+            else if (timezone) {
                 timezoneOffset = Object.values(timezone)[0].TZOFFSETTO;
                 timezoneOffset = timezoneOffset.slice(0, 3) + ":" + timezoneOffset.slice(3);
             }
-            const date = [year, month, day].join('-') + 'T' + [hours, mins, secs].join(':') + timezoneOffset;
+            date = [year, month, day].join('-') + 'T' + [hours, mins, secs].join(':') + timezoneOffset;
 
             epochTime = new Date(date).getTime();
+            console.log(date, new Date(date).toString())
             title = event.summary;
             const phoneNumberValid = phonNumberValidatorRegex.test(event.location);
             if (phoneNumberValid) {
